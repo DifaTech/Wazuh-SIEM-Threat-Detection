@@ -37,7 +37,7 @@ The environment consisted of three virtual machines connected through a **Virtua
 
 ---
 
-## Network Design
+## 📌 Network Design
 
 The VirtualBox Host-Only network allowed the virtual machines to communicate with each other within an isolated laboratory environment.
 
@@ -69,7 +69,7 @@ This setup made it possible to perform the security simulations without targetin
 ```
 ---
 
-## Log Sources
+## 📊Log Sources
 
 The Windows endpoint forwarded:
 
@@ -90,7 +90,7 @@ These logs were collected by the Wazuh Manager for centralized monitoring and an
 
 The SIEM deployment was validated through three controlled simulations performed within the isolated laboratory environment.
 
-### 1. SSH Brute-Force Attempt
+### 1️⃣ SSH Brute-Force Attempt
 
 The SSH brute-force simulation was launched from the Kali Linux endpoint against the Ubuntu Wazuh Manager.
 
@@ -111,9 +111,9 @@ The resulting authentication events generated alerts including:
 - Rule ID ``5710`` — ``sshd: Attempt to login using a non-existent user``
 - Rule ID ``5503`` — ``PAM: User login failed``
 
-MITRE ATT&CK: ``T1110`` – Brute Force
+**MITRE ATT&CK:** ``T1110`` – Brute Force
 
-### 2. Unauthorized Administrator Account Creation
+### 2️⃣ Unauthorized Administrator Account Creation
 
 The second simulation was performed on the Windows 10 endpoint to test Wazuh's ability to detect changes involving local user accounts and administrator privileges.
 
@@ -140,7 +140,7 @@ Level: 12
 
 The alerts allowed the account creation and subsequent administrator-group modification to be identified and investigated through the Wazuh Dashboard.
 
-MITRE ATT&CK Mapping
+**MITRE ATT&CK Mapping**
 
 - T1136 — Create Account
 - T1136.001 — Local Account
@@ -149,7 +149,7 @@ MITRE ATT&CK Mapping
 This simulation demonstrated how changes to local accounts and privileged groups can be monitored as potential indicators of unauthorized activity.
 
 
-### 3. Windows Security Event Log Clearing
+### 3️⃣ Windows Security Event Log Clearing
 
 The Windows Security Event Log was cleared to simulate a **defense evasion** activity that an attacker may attempt after compromising a system.
 
@@ -217,7 +217,7 @@ This investigation demonstrated how related Windows account-management events ca
 
 ---
 
-## Detection Summary
+## 📊 Detection Summary
 
 Activity |	Wazuh Rule |	Level |	Description
 |---|---|---|---|
