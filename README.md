@@ -35,7 +35,9 @@ The environment consisted of three virtual machines connected through a **Virtua
 | Windows Endpoint | Windows 10 | Monitored Endpoint | `192.168.56.105` |
 | Linux Endpoint | Kali Linux | Monitored Endpoint / Attack Source | `192.168.56.104` |
 
-### Network Design
+---
+
+## Network Design
 
 The VirtualBox Host-Only network allowed the virtual machines to communicate with each other within an isolated laboratory environment.
 
@@ -65,8 +67,9 @@ This setup made it possible to perform the security simulations without targetin
 | Security Testing        | | Windows Logs            |
 +-------------------------+ +-------------------------+
 ```
+---
 
-### Log Sources
+## Log Sources
 
 The Windows endpoint forwarded:
 
@@ -99,20 +102,22 @@ The purpose was to generate multiple failed SSH authentication attempts and obse
 hydra -l fakeuser -p "pass1,pass2,pass3,pass4,pass5" ssh://192.168.56.103
 ```
 
-The action generated authentication failure events that Wazuh collected and analyzed.
+The activity generated multiple failed SSH authentication events on the Ubuntu host, which were collected and analyzed by Wazuh.
 
 **Wazuh Detection**
 
-The resulting authentication events were collected by Wazuh and generated alerts including:
+The resulting authentication events generated alerts including:
 
-``Rule ID 5710 — sshd: Attempt to login using a non-existent user
-Rule ID 5503 — PAM: User login failed``
+- Rule ID ``5710`` — ``sshd: Attempt to login using a non-existent user``
+- Rule ID ``5503`` — ``PAM: User login failed``
 
-MITRE ATT&CK: T1110 – Brute Force
+MITRE ATT&CK: ``T1110`` – Brute Force
 
 ### 2. Unauthorized Administrator Account Creation
 
-A local Windows account named `hackeradmin` was created on the Windows 10 endpoint and subsequently added to the local Administrators group.
+The second simulation was performed on the Windows 10 endpoint to test Wazuh's ability to detect changes involving local user accounts and administrator privileges.
+
+A local Windows account named `hackeradmin` was created and then added to the local **Administrators** group.
 
 **Commands used:**
 ```
@@ -120,16 +125,28 @@ net user hackeradmin Password123! /add
 net localgroup Administrators hackeradmin /add
 ```
 
-The actions generated Windows Security Event Logs which were forwarded to the Wazuh Manager for analysis.
+The first command created the local user account, while the second command added the account to the local Administrators group.
+
+The resulting Windows Security events were collected by the Wazuh agent and forwarded to the Wazuh Manager for analysis.
 
 **Wazuh Detection**
 
-The activity was detected through Wazuh alerts related to account creation and changes to the Administrators group.
+The activity generated alerts related to the creation of the local account and the modification of the Administrators group:
 
-**MITRE ATT&CK:**
+- Rule ID `60109` — `User account enabled or created`
+Level: 8
+- Rule ID `60154` — `Administrators Group Changed`
+Level: 12
 
--T1136 — Create Account
--T1098 — Account Manipulation
+The alerts allowed the account creation and subsequent administrator-group modification to be identified and investigated through the Wazuh Dashboard.
+
+MITRE ATT&CK Mapping
+
+- T1136 — Create Account
+- T1136.001 — Local Account
+- T1098 — Account Manipulation
+
+This simulation demonstrated how changes to local accounts and privileged groups can be monitored as potential indicators of unauthorized activity.
 
 
 ### 3. Windows Security Event Log Clearing
@@ -147,8 +164,8 @@ This command was used to clear the Windows Security Event Log in the controlled 
 
 Wazuh detected the resulting Windows security event and generated:
 
-``Rule ID 63103 — The audit log was cleared
-Level: 5``
+- Rule ID `63103` — `The audit log was cleared`
+Level: 5
 
 This demonstrated that even an attempt to remove security records could itself generate a detectable event.
 
@@ -190,9 +207,13 @@ The activity involved two main actions:
 1. Creating the ``hackeradmin`` local account.
 2. Adding ``hackeradmin`` to the local Administrators group.
 
-The Windows endpoint generated security events for these activities, which were collected by the Wazuh agent and forwarded to the Wazuh Manager.
+The Windows endpoint generated security events for these activities. The Wazuh agent collected the events and forwarded them to the Wazuh Manager, where they were analyzed and displayed as alerts in the Wazuh Dashboard.
 
-Wazuh then generated alerts that made the activity visible through the Dashboard.
+The account creation activity generated **Wazuh Rule ID `60109`**, while the subsequent modification of the Administrators group generated **Wazuh Rule ID `60154`**.
+
+The second alert had a **Level 12** severity, making the administrator-group modification the higher-level alert observed during this activity.
+
+This investigation demonstrated how related Windows account-management events can be monitored together to provide a clearer understanding of suspicious activity on an endpoint.
 
 ---
 
