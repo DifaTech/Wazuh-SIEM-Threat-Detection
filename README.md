@@ -10,6 +10,21 @@ The lab was implemented using **Oracle VirtualBox** and consisted of a Wazuh Man
 
 ---
 
+## 🎯 Project Objectives
+
+The main objectives of the project were to:
+
+1. Deploy a centralized Wazuh SIEM Manager using Ubuntu Server.
+2. Connect Windows 10 and Kali Linux endpoints to the Wazuh Manager using Wazuh agents.
+3. Configure the endpoints to forward security-related logs to the SIEM.
+4. Simulate controlled security activities within the isolated laboratory.
+5. Verify that Wazuh could detect and record the activities.
+6. Analyze generated alerts using the Wazuh Dashboard.
+7. Map relevant detected activities to the MITRE ATT&CK framework.
+8. Document observations and security recommendations.
+
+---
+
 ## 🏗️ Lab Architecture
 
 The environment consisted of three virtual machines connected through a **VirtualBox Host-Only network**.
@@ -19,6 +34,37 @@ The environment consisted of three virtual machines connected through a **Virtua
 | Wazuh Manager & Dashboard | Ubuntu Server | SIEM Manager | `192.168.56.103` |
 | Windows Endpoint | Windows 10 | Monitored Endpoint | `192.168.56.105` |
 | Linux Endpoint | Kali Linux | Monitored Endpoint / Attack Source | `192.168.56.104` |
+
+### Network Design
+
+The VirtualBox Host-Only network allowed the virtual machines to communicate with each other within an isolated laboratory environment.
+
+This setup made it possible to perform the security simulations without targeting external or unauthorized systems.
+
+### Basic Architecture
+
+```text
++-----------------------------------------------------+
+|                    Wazuh Manager                    |
+|                    Ubuntu Server                    |
+|                   192.168.56.103                    |
+|                                                     |
+|            Wazuh Manager + Wazuh Dashboard          |
++--------------------------+--------------------------+
+                           |
+                   Host-Only Network
+                           |
+             +-------------+-------------+
+             |                           |
+             v                           v
++-------------------------+ +-------------------------+
+|       Kali Linux        | |       Windows 10        |
+|     192.168.56.104      | |     192.168.56.105      |
+|                         | |                         |
+| Wazuh Agent             | | Wazuh Agent             |
+| Security Testing        | | Windows Logs            |
++-------------------------+ +-------------------------+
+```
 
 ### Log Sources
 
@@ -37,21 +83,6 @@ These logs were collected by the Wazuh Manager for centralized monitoring and an
 
 ---
 
-## 🎯 Project Objectives
-
-The main objectives of the project were to:
-
-1. Deploy a centralized Wazuh SIEM Manager using Ubuntu Server.
-2. Connect Windows 10 and Kali Linux endpoints to the Wazuh Manager using Wazuh agents.
-3. Configure the endpoints to forward security-related logs to the SIEM.
-4. Simulate controlled security activities within the isolated laboratory.
-5. Verify that Wazuh could detect and record the activities.
-6. Analyze generated alerts using the Wazuh Dashboard.
-7. Map relevant detected activities to the MITRE ATT&CK framework.
-8. Document observations and security recommendations.
-
----
-
 ## 🔍 Security Simulations & Detection
 
 The SIEM deployment was validated through three controlled simulations performed within the isolated laboratory environment.
@@ -64,12 +95,20 @@ The purpose was to generate multiple failed SSH authentication attempts and obse
 
 **Command used:**
 
-``
-hydra -l fakeuser -p "pass1,pass2,pass3,pass4,pass5" ssh://192.168.56.103``
+```
+hydra -l fakeuser -p "pass1,pass2,pass3,pass4,pass5" ssh://192.168.56.103
+```
 
-The action generated a Windows security event which was collected and detected by Wazuh.
+The action generated authentication failure events that Wazuh collected and analyzed.
 
-**MITRE ATT&CK:** T1110 – Brute Force
+**Wazuh Detection**
+
+The resulting authentication events were collected by Wazuh and generated alerts including:
+
+``Rule ID 5710 — sshd: Attempt to login using a non-existent user
+Rule ID 5503 — PAM: User login failed``
+
+MITRE ATT&CK: T1110 – Brute Force
 
 ### 2. Unauthorized Administrator Account Creation
 
@@ -83,14 +122,15 @@ net localgroup Administrators hackeradmin /add
 
 The actions generated Windows Security Event Logs which were forwarded to the Wazuh Manager for analysis.
 
+**Wazuh Detection**
+
 The activity was detected through Wazuh alerts related to account creation and changes to the Administrators group.
 
 **MITRE ATT&CK:**
 
-- T1136 – Create Account
-- T1136.001 – Local Account
+-T1136 — Create Account
+-T1098 — Account Manipulation
 
----
 
 ### 3. Windows Security Event Log Clearing
 
@@ -101,8 +141,26 @@ The Windows Security Event Log was cleared to simulate a **defense evasion** act
 ```
 wevtutil cl Security
 ```
+This command was used to clear the Windows Security Event Log in the controlled laboratory environment.
 
-The action generated a Windows security event which was collected and detected by Wazuh.
+**Wazuh Detection**
+
+Wazuh detected the resulting Windows security event and generated:
+
+``Rule ID 63103 — The audit log was cleared
+Level: 5``
+
+This demonstrated that even an attempt to remove security records could itself generate a detectable event.
+
+**MITRE ATT&CK Mapping**
+
+T1070.001 — Clear Windows Event Logs
+
+This technique falls under Indicator Removal, where an attacker attempts to remove or modify evidence of their activity.
+
+**Evidence**
+
+Screenshots showing the command execution and the corresponding Wazuh alert are included in this repository.
 
 ---
 
@@ -125,23 +183,44 @@ Screenshots and supporting evidence are provided in this repository to demonstra
 
 ## 📑 Incident Analysis
 
-One of the main activities investigated during the project was the creation of an unauthorized local administrator account.
+One of the main activities investigated during the project was the creation of an unauthorized local administrator account on the Windows endpoint.
 
-The activity involved creating the `hackeradmin` account and adding it to the local Administrators group. Windows generated Security Event Logs for these actions, which were forwarded to the Wazuh Manager.
+The activity involved two main actions:
 
-Wazuh analyzed the incoming events and generated alerts that allowed the activity to be identified and reviewed through the Dashboard.
+1. Creating the ``hackeradmin`` local account.
+2. Adding ``hackeradmin`` to the local Administrators group.
 
-This demonstrated how centralized log collection can provide visibility into account-management activities that may indicate unauthorized access or persistence.
+The Windows endpoint generated security events for these activities, which were collected by the Wazuh agent and forwarded to the Wazuh Manager.
 
-### MITRE ATT&CK Mapping
+Wazuh then generated alerts that made the activity visible through the Dashboard.
 
-| Category | Details |
-|---|---|
-| Tactic | Persistence |
-| Technique | T1136 – Create Account |
-| Sub-technique | T1136.001 – Local Account |
-| Platform | Windows |
-| Detection Source | Windows Security Event Logs collected by Wazuh |
+---
+
+## Detection Summary
+
+Activity |	Wazuh Rule |	Level |	Description
+|---|---|---|---|
+Local account creation |	``60109`` |	8 |	User account enabled or created
+Administrator group modification |	``60154`` |	12 | Administrators Group Changed
+Windows Security Log clearing |	``63103`` |	5 |	The audit log was cleared
+SSH authentication failure	| ``5710``	| 5	| Attempt to login using a non-existent user
+SSH authentication failure	| ``5503`` |	5 |	PAM: User login failed
+
+---
+
+## 🧭 MITRE ATT&CK Mapping
+
+The detected activities were mapped to relevant MITRE ATT&CK techniques.
+
+Security Activity |	MITRE ATT&CK Technique |	Technique Name
+|---|---|---|
+SSH authentication attacks |	``T1110`` |	Brute Force
+Local account creation |	``T1136``	| Create Account
+Local account creation |	``T1136.001``	| Local Account
+Administrator group modification |	``T1098`` |	Account Manipulation
+Windows Security Event Log clearing	| ``T1070.001``|	Clear Windows Event Logs
+
+The mapping helped provide a standard way of describing the activities observed during the lab
 
 ---
 
