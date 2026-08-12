@@ -372,7 +372,7 @@ The successful Active status confirmed that:
 
 The project report confirms that both Windows and Kali agents became active and continuously forwarded logs to the Manager.
 
-![Proof of Setup](../images/setup/Proof%20of%20Setup.png)
+![Proof of Setup](https://github.com/DifaTech/Wazuh-SIEM-Threat-Detection/blob/main/images/setup/Real%20proof%20of%20setup.png)
 
 ---
 
@@ -390,7 +390,12 @@ This confirmed that the Windows endpoint was successfully sending telemetry to t
 
 ## Kali Linux Log Ingestion
 
-Kali Linux authentication and Syslog events were also successfully received and parsed.
+The Kali endpoint provided authentication and system log information through the configured:
+
+```bash
+/var/log/auth.log
+/var/log/syslog
+```
 
 This provided visibility into Linux authentication activity, system processes, and administrative activities.
 
