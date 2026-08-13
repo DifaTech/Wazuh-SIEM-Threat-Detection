@@ -274,6 +274,14 @@ Through this project, I gained practical experience in:
 
 ---
 
+## 📖 Detailed Walkthrough
+
+For a step-by-step explanation of the lab, including the virtual machine setup, Wazuh Manager and Agent deployment, log collection configuration, security simulations, detection analysis, and supporting evidence, see the:
+
+[📖 Detailed Lab Walkthrough](https://github.com/DifaTech/Wazuh-SIEM-Threat-Detection/blob/main/documentation/walkthrough.md)
+
+---
+
 ## ⚠️ Disclaimer
 
 All security simulations in this project were performed in an isolated virtual laboratory created for educational purposes. No unauthorized systems or real-world networks were targeted.
