@@ -507,6 +507,8 @@ The account was then added to the local Administrators group:
 net localgroup Administrators hackeradmin /add
 ```
 
+These actions were performed on the Windows endpoint as part of the controlled security simulation.
+
 ### Command Evidence
 
 ![Account Creation Command](../images/account-creation/account%20creation%20command.png)
@@ -522,9 +524,25 @@ The Windows Wazuh Agent forwarded the events to the Wazuh Manager, where they we
 The observed alerts included:
 
 ```text
-Rule ID 60109
-User account enabled or created
+Rule ID: 60109
+Description: User account enabled or created
 Level: 8
+```
+
+The corresponding Windows event was recorded as Event ID `4722`, indicating that the `hackeradmin` account was enabled.
+
+The raw Wazuh alert also identified:
+```text
+Target Account: hackeradmin
+Subject Account: Dimma
+Computer: DESKTOP-G4G2BSJ
+```
+
+Wazuh mapped this alert to:
+
+```text
+MITRE ATT&CK: T1098 — Account Manipulation
+Tactic: Persistence
 ```
 
 and:
@@ -547,7 +565,27 @@ The second alert was particularly important because it showed that the newly cre
 
 The raw Wazuh event data was also reviewed to understand the information contained within the alert.
 
-The raw event provided additional details about the detected activity and the affected Windows endpoint.
+The alert showed that the event originated from:
+
+```text
+Agent: Windows-target
+IP Address: 192.168.56.105
+Wazuh Manager: Ubuntu
+```
+
+The Windows Security event was processed through the Wazuh windows_eventchannel decoder.
+
+The relevant event information included:
+
+```text
+Windows Event ID: 4722
+Target Account: hackeradmin
+Subject Account: Dimma
+Computer: DESKTOP-G4G2BSJ
+Wazuh Rule ID: 60109
+Wazuh Level: 8
+Rule Description: User account enabled or created
+```
 
 ### Raw Log Evidence
 
@@ -557,16 +595,37 @@ The raw event provided additional details about the detected activity and the af
 
 ## 11.5 MITRE ATT&CK Mapping
 
-The account creation activity was mapped to:
+The Wazuh alert for the account activity was mapped to:
+
+```text
+T1098 — Account Manipulation
+```
+
+The activity was associated with the:
+
+```text
+Persistence
+```
+
+tactic.
+
+The account creation itself can also be described using:
 
 ```text
 T1136 — Create Account
+```
+
+and:
+
+```text
 T1136.001 — Local Account
 ```
 
-The activity was associated with the **Persistence** tactic because unauthorized accounts can be created to maintain access to a compromised system.
+because a local Windows account was created during the simulation.
 
-The administrator group modification was also analyzed as account manipulation activity.
+The subsequent modification of the local Administrators group represents an additional account-related privilege change.
+
+The combination of these activities demonstrates how an attacker could attempt to establish or modify a privileged account for continued access to a compromised Windows system.
 
 ---
 
